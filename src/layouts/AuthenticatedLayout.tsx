@@ -3,7 +3,11 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 
-const AuthenticatedLayout = () => {
+interface AuthenticatedLayoutProps {
+    children?: React.ReactNode;
+}
+
+const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
 
@@ -13,7 +17,7 @@ const AuthenticatedLayout = () => {
             <div className={`flex-1 flex flex-col ml-0 transition-all duration-300 ${isSidebarOpen ? 'ml-64' : ''}`}>
                 <Navbar setIsSidebarOpen={setIsSidebarOpen} />
                 <main className="flex-1 p-6">
-                    <Outlet />
+                    {children ? children : <Outlet />}
                 </main>
             </div>
         </div>

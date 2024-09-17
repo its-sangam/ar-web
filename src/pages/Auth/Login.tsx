@@ -5,14 +5,15 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { loginUser } from "@/services/authService";
 import { loginSchema } from "@/lib/validators/login-validators";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useUserContext } from "@/contexts/UserContext";
 
 interface IFormInput {
     email: string;
     password: string;
 }
 
-const Register: React.FC = () => {
+const Login: React.FC = () => {
     const {
         register,
         handleSubmit,
@@ -22,10 +23,15 @@ const Register: React.FC = () => {
     } = useForm<IFormInput>({
         resolver: yupResolver(loginSchema),
     });
+    const { setUser, setIsAuthenticated } = useUserContext();
+    const navigate = useNavigate();
 
     const mutation = useMutation(loginUser, {
-        onSuccess: () => {
+        onSuccess: (response) => {
             toast.success("Logged In successfully!");
+            setUser(response.data.user);
+            setIsAuthenticated(true);
+            navigate('/dashboard');
         },
         onError: (error: any) => {
             if (error?.status === 400) {
@@ -99,4 +105,4 @@ const Register: React.FC = () => {
     );
 };
 
-export default Register;
+export default Login;

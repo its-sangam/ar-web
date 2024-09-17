@@ -5,7 +5,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { registerUser } from "@/services/authService";
 import { registerSchema } from "@/lib/validators/register-validators";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface IFormInput {
     first_name: string;
@@ -31,10 +31,13 @@ const Register: React.FC = () => {
         resolver: yupResolver(registerSchema),
     });
 
+    const navigate = useNavigate();
+
     const mutation = useMutation(registerUser, {
         onSuccess: () => {
-            toast.success("User Registered Successfully! Proceed to login");
+            toast.success("User Registered Successfully!");
             reset();
+            navigate('/login');
         },
         onError: (error: any) => {
             if (error?.status === 400) {
