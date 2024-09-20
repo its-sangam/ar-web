@@ -90,12 +90,12 @@ export const routes: RouteConfig[] = [
         roles: ['super_admin','artist_manager','artist'],
     },
     {
-        path: '/artist/:id/musics/create',
+        path: 'musics/create',
         component: MusicCreate,
-        roles: ['artist'],
+        roles: ['artist_manager', 'artist'],
     },
     {
-        path: '/artist/:id/musics/:musicId/edit',
+        path: 'music/:musicId/edit',
         component: MusicEdit,
         roles: ['artist'],
     },

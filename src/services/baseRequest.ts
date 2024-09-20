@@ -4,6 +4,10 @@ import { getCookie, removeCookie } from "@/utils/cookieUtils";
 const apiUrl = import.meta.env.VITE_API_URL;
 const baseRequest = axios.create({
   baseURL: apiUrl,
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+  },
 });
 
 baseRequest.interceptors.request.use(
@@ -14,15 +18,11 @@ baseRequest.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 baseRequest.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       removeCookie("authToken");

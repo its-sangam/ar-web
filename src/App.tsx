@@ -17,6 +17,7 @@ const queryClient = new QueryClient();
 
 const App: React.FC = () => {
   const { isAuthenticated, user, loading } = useUserContext();
+
   console.log(isAuthenticated);
 
   if (loading) {

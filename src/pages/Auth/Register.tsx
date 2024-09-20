@@ -145,7 +145,6 @@ const Register: React.FC = () => {
                             type="date"
                             {...register("dob")}
                             className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring focus:ring-indigo-200"
-                            // onChange={(e) => setValue("dob", new Date(e.target.value))} // Handle change
                         />
                         {errors.dob && (
                             <p className="text-sm text-red-500">{errors.dob.message}</p>

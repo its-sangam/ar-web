@@ -56,7 +56,7 @@ const Navbar = ({ setIsSidebarOpen }: any) => {
                         <li>
                             <button
                                 onClick={handleLogout}
-                                className="block px-4 py-2 text-white hover:bg-indigo-700 w-full text-left" // Added w-full and text-left
+                                className="block px-4 py-2 text-white hover:bg-indigo-700 w-full text-left"
                             >
                                 <FaSignOutAlt className="inline mr-2" />
                                 Logout
