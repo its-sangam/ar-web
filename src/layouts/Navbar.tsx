@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { FaUser, FaSignOutAlt, FaBars } from 'react-icons/fa';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { FaSignOutAlt, FaBars } from 'react-icons/fa';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useUserContext } from '@/contexts/UserContext';
 
@@ -41,18 +41,18 @@ const Navbar = ({ setIsSidebarOpen }: any) => {
                     />
                     <div className="ml-2">
                         <span className="block font-semibold text-gray-800">{user?.first_name + ' ' + user?.last_name}</span>
-                        <span className="block text-sm text-gray-500">{user?.role}</span>
+                        <span className="block text-sm text-gray-500">{user?.role === 'super_admin' ? 'Super Admin' : user?.role === 'artist_manager' ? 'Artist Manager' : "Artist"}</span>
                     </div>
                 </button>
 
                 <div className={`absolute right-0 mt-2 w-48 bg-indigo-800 border border-indigo-600 rounded shadow-lg ${isProfileMenuOpen ? 'block' : 'hidden'}`}>
                     <ul>
-                        <li>
+                        {/* <li>
                             <Link to="/manage-account" className="block px-4 py-2 text-white hover:bg-indigo-700">
                                 <FaUser className="inline mr-2" />
                                 Manage Account
                             </Link>
-                        </li>
+                        </li> */}
                         <li>
                             <button
                                 onClick={handleLogout}

@@ -5,7 +5,6 @@ const Dashboard = lazy(() => import('@/pages/Home'));
 const UserList = lazy(() => import('@/pages/Users/List'));
 const UserCreate = lazy(() => import('@/pages/Users/Create'));
 const UserEdit = lazy(() => import('@/pages/Users/Edit'));
-const ManageAccount = lazy(() => import('@/pages/Users/ManageAccount'));
 
 const ArtistList = lazy(() => import('@/pages/Artists/List'));
 const ArtistCreate = lazy(() => import('@/pages/Artists/Create'));
@@ -36,11 +35,6 @@ export const routes: RouteConfig[] = [
         roles: ['super_admin','artist_manager', 'artist'],
         name: "Dashboard",
         icon: FaTachometerAlt
-    },
-    {
-        path: '/manage-account',
-        component: ManageAccount,
-        roles: ['super_admin', 'artist_manager', 'artist'],
     },
     {
         path: '/users/list',

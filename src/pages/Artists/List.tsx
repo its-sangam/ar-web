@@ -2,14 +2,16 @@ import React, { useEffect, useState } from "react";
 import { FaEdit, FaEye, FaTrash } from 'react-icons/fa';
 import { Link } from "react-router-dom";
 import Datatable from "@/components/Datatable";
-import { listArtists, deleteArtist } from "@/services/artistService";
+import { listArtists, deleteArtist, exportArtists, importArtists } from "@/services/artistService";
 import { toast } from "react-toastify";
 import { useUserContext } from "@/contexts/UserContext";
+import CSVImportModal from "@/components/CSVImportModal";
 
 const List: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState([]);
     const { user } = useUserContext();
+    const [uploadErrors] = useState<string[]>([]);
 
 
     const columns = [
@@ -80,6 +82,53 @@ const List: React.FC = () => {
             }
         }
     };
+
+    const handleExport = async () => {
+        const isConfirmed = window.confirm("Do you want to export the artists in csv format?");
+
+        if (isConfirmed) {
+            try {
+                const blob = await exportArtists();
+
+                if (blob.records) {
+                    const url = window.URL.createObjectURL(new Blob([blob.records]));
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'artists.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+
+                    toast.success("Artist Exported Successfully!");
+                }
+            } catch (error) {
+                console.error("Failed to export the artists:", error);
+            }
+        }
+    }
+
+    const [isCSVUploadModalOpen, setIsCSVUploadModalOpen] = useState(false);
+
+    const handleUpload = async (file: File): Promise<string[]> => {
+        const errors: string[] = [];
+        try {
+            const response = await importArtists(file);
+            if (response?.status === 200) {
+                toast.success("CSV file uploaded successfully!");
+                fetchData();
+                setIsCSVUploadModalOpen(false);
+            } else {
+                errors.push(response?.data?.message);
+            }
+        } catch (error) {
+            console.error("Failed to upload CSV file:", error);
+            errors.push("Failed to upload CSV file. Please try again.");
+        }
+        return errors;
+    };
+    
+    
+    
     return (
 
         <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8 px-4">
@@ -88,25 +137,32 @@ const List: React.FC = () => {
                     <h1 className="text-3xl font-bold text-gray-800">Artists List</h1>
                     <div className="flex gap-2">
                         {user?.role === 'artist_manager' &&
-                        <>
-                        <Link to="/artist/create">
-                            <button className="px-4 py-2 text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 focus:ring focus:ring-indigo-200">
-                                Import
-                            </button>
-                        </Link>
-                        <Link to="/artist/create">
-                            <button className="px-4 py-2 text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 focus:ring focus:ring-indigo-200">
-                                Export
-                            </button>
-                        </Link>
-                        <Link to="/artist/create">
-                            <button className="px-4 py-2 text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 focus:ring focus:ring-indigo-200">
-                                Add New Artist
-                            </button>
-                        </Link>
-                        </>}
+                            <>
+                                {/* <Link to="/artist/create"> */}
+                                <button onClick={() => setIsCSVUploadModalOpen(true)} className="px-4 py-2 text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 focus:ring focus:ring-indigo-200">
+                                    Import
+                                </button>
+                                {/* </Link> */}
+                                {/* <Link to="/artist/create"> */}
+                                <button onClick={handleExport} className="px-4 py-2 text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 focus:ring focus:ring-indigo-200">
+                                    Export
+                                </button>
+                                {/* </Link> */}
+                                <Link to="/artist/create">
+                                    <button className="px-4 py-2 text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 focus:ring focus:ring-indigo-200">
+                                        Add New Artist
+                                    </button>
+                                </Link>
+                            </>}
                     </div>
                 </div>
+
+                <CSVImportModal
+                    isOpen={isCSVUploadModalOpen}
+                    onClose={() => setIsCSVUploadModalOpen(false)}
+                    onUpload={handleUpload}
+                    uploadErrors={uploadErrors}
+                />
 
                 <div className="w-full p-4 space-y-6 bg-white rounded-lg shadow-md">
                     <Datatable columns={columns} data={data} loading={loading} />

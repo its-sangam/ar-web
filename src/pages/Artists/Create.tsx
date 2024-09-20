@@ -21,7 +21,7 @@ interface IFormInput {
     address: string;
     first_release_year: number;
     no_of_albums_released: number;
-    musics: IMusicInput[];
+    musics?: IMusicInput[];
 }
 
 const CreateArtist: React.FC = () => {

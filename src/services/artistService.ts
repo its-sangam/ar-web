@@ -1,4 +1,4 @@
-import baseRequest from "./baseRequest";
+import {baseRequest, formRequest} from "./baseRequest";
 
 const handleError = (error: any) => {
     throw error?.response || error;
@@ -49,6 +49,27 @@ export const deleteArtist = async (id: any) => {
     try {
         const response = await baseRequest.delete(`/api/artists/${id}`);
         return response.data;
+    } catch (error: any) {
+        handleError(error);
+    }
+};
+
+export const exportArtists = async() => {
+    try {
+        const response = await baseRequest.get(`/api/artists/export/csv`);
+        return response.data;
+    } catch (error: any) {
+        handleError(error);
+    }
+}
+
+export const importArtists = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await formRequest.post(`/api/artists/import/csv`, formData);
+        return response;
     } catch (error: any) {
         handleError(error);
     }
