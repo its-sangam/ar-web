@@ -3,7 +3,7 @@ name: React CI/CD
 on:
   push:
     branches:
-      - main
+      - '**'
 
 jobs:
   build:
@@ -21,12 +21,15 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-    #   - name: Run Tests
-    #     run: npm test
+      - name: Lint Code
+        run: npm run lint
+
+      # - name: Run Tests
+      #   run: npm test -- --ci --silent --coverage
 
       - name: Build Application
         run: npm run build
-    
+
       - name: Cache node_modules
         uses: actions/cache@v2
         with:
@@ -35,8 +38,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-    #   - name: Deploy to S3 (Example)
-    #     run: aws s3 sync ./build s3://your-s3-bucket-name --delete
-    #     env:
-    #       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    # Optionally, you can add a deployment step if needed, e.g., to S3, Firebase, etc.
+    # - name: Deploy to S3 (Example)
+    #   run: aws s3 sync ./build s3://your-s3-bucket-name --delete
+    #   env:
+    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

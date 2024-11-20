@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import { Link } from "react-router-dom";
 import Datatable from "@/components/Datatable";
@@ -21,7 +21,21 @@ const List: React.FC = () => {
         { label: "Actions", data: "actions", searchable: false },
     ];
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
+        const handleDelete = async (id: number) => {
+            const isConfirmed = window.confirm("Do you want to delete the user?");
+        
+            if (isConfirmed) {
+                try {
+                    await deleteUser(id);
+                    toast.success("User Deleted Successfully!");
+                    fetchData();
+                } catch (error) {
+                    console.error("Failed to delete the user:", error);
+                }
+            }
+        };
+    
         try {
             const res = await listUsers();
             const formattedData = res.data.map((user: any, index: number) => ({
@@ -46,32 +60,18 @@ const List: React.FC = () => {
                 ),
             }));
             setData(formattedData);
-        } catch (err) {
+        } catch{
             toast.error("Failed Fetching User Data");
             setData([]);
         } finally {
             setLoading(false);
         }
-    };
+    }, []);  // No need to add handleDelete to the dependency array as it's now inside fetchData
 
     useEffect(() => {
         fetchData();
-    }, []);
-
-
-    const handleDelete = async (id: number) => {
-        const isConfirmed = window.confirm("Do you want to delete the user?");
-
-        if (isConfirmed) {
-            try {
-                await deleteUser(id);
-                toast.success("User Deleted Successfully!");
-                fetchData();
-            } catch (error) {
-                console.error("Failed to delete the user:", error);
-            }
-        }
-    };
+    }, [fetchData]);
+    
     return (
 
         <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8 px-4">

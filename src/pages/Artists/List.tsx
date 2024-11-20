@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { FaEdit, FaEye, FaTrash } from 'react-icons/fa';
 import { Link } from "react-router-dom";
 import Datatable from "@/components/Datatable";
@@ -25,7 +25,20 @@ const List: React.FC = () => {
         { label: "Actions", data: "actions", searchable: false },
     ];
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
+        const handleDelete = async (id: number) => {
+            const isConfirmed = window.confirm("Do you want to delete the artist?");
+    
+            if (isConfirmed) {
+                try {
+                    await deleteArtist(id);
+                    toast.success("Artist Deleted Successfully!");
+                    fetchData();
+                } catch (error) {
+                    console.error("Failed to delete the artist:", error);
+                }
+            }
+        };
         try {
             const res = await listArtists();
             const formattedData = res.data.map((artist: any, index: number) => ({
@@ -56,32 +69,18 @@ const List: React.FC = () => {
                 ),
             }));
             setData(formattedData);
-        } catch (err) {
+        } catch{
             toast.error("Failed Fetching Artist Data");
             setData([]);
         } finally {
             setLoading(false);
         }
-    };
+    },[user?.role]);
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [fetchData]);
 
-
-    const handleDelete = async (id: number) => {
-        const isConfirmed = window.confirm("Do you want to delete the artist?");
-
-        if (isConfirmed) {
-            try {
-                await deleteArtist(id);
-                toast.success("Artist Deleted Successfully!");
-                fetchData();
-            } catch (error) {
-                console.error("Failed to delete the artist:", error);
-            }
-        }
-    };
 
     const handleExport = async () => {
         const isConfirmed = window.confirm("Do you want to export the artists in csv format?");

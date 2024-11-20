@@ -20,11 +20,9 @@ interface IFormInput {
 
 const EditUser: React.FC = () => {
     const { id } = useParams();
-    if (!id) {
-        return <div>User Not Found</div>;
-    }
     const navigate = useNavigate();
 
+    // Ensure that hooks are called unconditionally
     const {
         register,
         handleSubmit,
@@ -45,41 +43,51 @@ const EditUser: React.FC = () => {
         }
     });
 
-    const { isLoading, error } = useQuery(['user', id], () => getUserDetails(id!), {
-        enabled: typeof parseInt(id) === 'number',
-        onSuccess: (res) => {
-            const { data } = res;
-            data.dob = new Date(data.dob).toISOString().split('T')[0]
-            reset(data);
-        },
-        onError: (error: any) => {
-            console.error(error);
-            toast.error("Error fetching user details");
-        }
-    });
-
-    const mutation = useMutation(({ id, data }: { id: string; data: IFormInput }) => updateUser(id, data), {
-        onSuccess: () => {
-            toast.success("User Updated Successfully!");
-            navigate('/users/list');
-        },
-        onError: (error: any) => {
-            if (error?.response?.status === 400) {
-                const serverErrors = error?.response?.data || {};
-                for (const [key, message] of Object.entries(serverErrors)) {
-                    setError(key as keyof IFormInput, {
-                        type: "manual",
-                        message: message as string,
-                    });
-                }
-            } else {
-                toast.error("User update failed. Please try again.");
+    // Conditionally enable query based on the presence of `id`
+    const { isLoading, error } = useQuery(
+        ['user', id],
+        () => getUserDetails(id!),
+        {
+            enabled: !!id, // Only enable the query if `id` exists
+            onSuccess: (res) => {
+                const { data } = res;
+                data.dob = new Date(data.dob).toISOString().split('T')[0]; // Format DOB
+                reset(data);
+            },
+            onError: (error: any) => {
+                console.error(error);
+                toast.error("Error fetching user details");
             }
         }
-    });
+    );
+
+    const mutation = useMutation(
+        ({ id, data }: { id: string; data: IFormInput }) => updateUser(id, data),
+        {
+            onSuccess: () => {
+                toast.success("User Updated Successfully!");
+                navigate('/users/list');
+            },
+            onError: (error: any) => {
+                if (error?.response?.status === 400) {
+                    const serverErrors = error?.response?.data || {};
+                    for (const [key, message] of Object.entries(serverErrors)) {
+                        setError(key as keyof IFormInput, {
+                            type: "manual",
+                            message: message as string,
+                        });
+                    }
+                } else {
+                    toast.error("User update failed. Please try again.");
+                }
+            }
+        }
+    );
 
     const onSubmit = (data: IFormInput) => {
-        mutation.mutate({ id: id, data: data });
+        if (id) {
+            mutation.mutate({ id: id, data: data });
+        }
     };
 
     if (isLoading) return <div>Loading...</div>;
