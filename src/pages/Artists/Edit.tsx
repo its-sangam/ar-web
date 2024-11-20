@@ -25,10 +25,71 @@ interface IFormInput {
 }
 
 const EditArtist: React.FC = () => {
+    // const { id } = useParams();
+    // if (!id) {
+    //     return <div>Artist Not Found</div>;
+    // }
+    // const navigate = useNavigate();
+
+    // const { register, handleSubmit, control, formState: { errors }, setError, reset } = useForm<IFormInput>({
+    //     resolver: yupResolver(ArtistSchema),
+    //     defaultValues: {
+    //         name: '',
+    //         dob: null,
+    //         gender: 'm',
+    //         address: '',
+    //         no_of_albums_released: 0,
+    //         first_release_year: 2000,
+    //         musics: [{ title: '', album_name: '', genre: 'rnb' }]
+    //     }
+    // });
+
+    // const { fields, append, remove } = useFieldArray({
+    //     control,
+    //     name: "musics"
+    // });
+
+    // const { isLoading, error } = useQuery(['artist', id], () => getArtistDetails(id!), {
+    //     enabled: !!id,
+    //     onSuccess: (res) => {
+    //         const { data } = res;
+    //         data.dob = new Date(data.dob).toISOString().split('T')[0];
+    //         reset(data);
+    //     },
+    //     onError: (error: any) => {
+    //         console.error(error);
+    //         toast.error("Error fetching artist details");
+    //     }
+    // });
+
+    // const mutation = useMutation(({ id, data }: { id: string; data: IFormInput }) => updateArtist(id, data), {
+    //     onSuccess: () => {
+    //         toast.success("Artist Updated Successfully!");
+    //         navigate('/artist/list');
+    //     },
+    //     onError: (error: any) => {
+    //         if (error?.response?.status === 400) {
+    //             const serverErrors = error?.response?.data || {};
+    //             for (const [key, message] of Object.entries(serverErrors)) {
+    //                 setError(key as keyof IFormInput, {
+    //                     type: "manual",
+    //                     message: message as string,
+    //                 });
+    //             }
+    //         } else {
+    //             toast.error("Artist update failed. Please try again.");
+    //         }
+    //     }
+    // });
+
+    // const onSubmit = (data: IFormInput) => {
+    //     mutation.mutate({ id: id, data: data });
+    // };
+
+    // if (isLoading) return <div>Loading...</div>;
+    // if (error) return <div>Error loading artist details.</div>;
+
     const { id } = useParams();
-    if (!id) {
-        return <div>Artist Not Found</div>;
-    }
     const navigate = useNavigate();
 
     const { register, handleSubmit, control, formState: { errors }, setError, reset } = useForm<IFormInput>({
@@ -44,48 +105,48 @@ const EditArtist: React.FC = () => {
         }
     });
 
-    const { fields, append, remove } = useFieldArray({
-        control,
-        name: "musics"
-    });
+    const { fields, append, remove } = useFieldArray({ control, name: "musics" });
 
-    const { isLoading, error } = useQuery(['artist', id], () => getArtistDetails(id!), {
-        enabled: !!id,
-        onSuccess: (res) => {
-            const { data } = res;
-            data.dob = new Date(data.dob).toISOString().split('T')[0];
-            reset(data);
-        },
-        onError: (error: any) => {
-            console.error(error);
-            toast.error("Error fetching artist details");
+    const { isLoading, error } = useQuery(
+        ['artist', id],
+        () => (id ? getArtistDetails(id!) : Promise.reject('No ID found')),
+        {
+            enabled: !!id,
+            onSuccess: (res) => {
+                const { data } = res;
+                data.dob = new Date(data.dob).toISOString().split('T')[0];
+                reset(data);
+            },
+            onError: (error: any) => {
+                console.error(error);
+                toast.error("Error fetching artist details");
+            },
         }
-    });
+    );
 
-    const mutation = useMutation(({ id, data }: { id: string; data: IFormInput }) => updateArtist(id, data), {
-        onSuccess: () => {
-            toast.success("Artist Updated Successfully!");
-            navigate('/artist/list');
-        },
-        onError: (error: any) => {
-            if (error?.response?.status === 400) {
-                const serverErrors = error?.response?.data || {};
-                for (const [key, message] of Object.entries(serverErrors)) {
-                    setError(key as keyof IFormInput, {
-                        type: "manual",
-                        message: message as string,
+    const mutation = useMutation(
+        ({ id, data }: { id: string; data: IFormInput }) => updateArtist(id, data),
+        {
+            onSuccess: () => {
+                toast.success("Artist Updated Successfully!");
+                navigate('/artist/list');
+            },
+            onError: ({ response }: any) => {
+                if (response?.status === 400) {
+                    const serverErrors = response?.data || {};
+                    Object.entries(serverErrors).forEach(([key, message]) => {
+                        setError(key as keyof IFormInput, { type: "manual", message: message as string });
                     });
+                } else {
+                    toast.error("Artist update failed. Please try again.");
                 }
-            } else {
-                toast.error("Artist update failed. Please try again.");
-            }
+            },
         }
-    });
+    );
 
-    const onSubmit = (data: IFormInput) => {
-        mutation.mutate({ id: id, data: data });
-    };
+    const onSubmit = (data: IFormInput) => mutation.mutate({ id: id!, data });
 
+    if (!id) return <div>Artist Not Found</div>;
     if (isLoading) return <div>Loading...</div>;
     if (error) return <div>Error loading artist details.</div>;
 

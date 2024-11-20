@@ -17,32 +17,16 @@ const UpdateMusic: React.FC = () => {
     const { musicId } = useParams();
     const navigate = useNavigate();
 
-    if (!musicId) {
-        return <div>Music Not Found</div>;
-    }
-
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        setError,
-        reset
-    } = useForm<IFormInput>({
-        resolver: yupResolver(MusicSchema),
-    });
-
-    const { isLoading, error } = useQuery(['music', musicId], () => getMusicDetails(musicId!), {
+    // Hook to fetch music details
+    const { isLoading, error, data } = useQuery(['music', musicId], () => getMusicDetails(musicId!), {
         enabled: !!musicId && !isNaN(Number(musicId)),
-        onSuccess: (res) => {
-            const { data } = res;
-            reset(data);
-        },
         onError: (error: any) => {
             console.error(error);
             toast.error("Error fetching music details");
         }
     });
 
+    // Hook for mutation to update music
     const mutation = useMutation(({ musicId, data }: { musicId: string; data: IFormInput }) => updateMusic(musicId, data), {
         onSuccess: () => {
             toast.success("Music Updated Successfully!");
@@ -63,10 +47,30 @@ const UpdateMusic: React.FC = () => {
         }
     });
 
+    // Hook to manage form state and validation
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        setError,
+        reset
+    } = useForm<IFormInput>({
+        resolver: yupResolver(MusicSchema),
+    });
+
+    // Reset form data when music details are successfully fetched
+    React.useEffect(() => {
+        if (data) {
+            reset(data);
+        }
+    }, [data, reset]);
+
     const onSubmit = (data: IFormInput) => {
+        if (!musicId) return; // Early return if musicId is not available
         mutation.mutate({ musicId, data });
     };
 
+    // Early return for loading or error state
     if (isLoading) return <div>Loading...</div>;
     if (error) return <div>Error loading music details.</div>;
 

@@ -1,0 +1,73 @@
+name: Deploy to VPS
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment (staging or production)'
+        required: true
+        default: staging
+
+jobs:
+  deploy:
+    name: Deploy Application on VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: |
+            ${{ secrets.VPS_PRIVATE_KEY }}
+
+      - name: Define Target Environment
+        id: env
+        run: echo "TARGET_ENV=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+
+      - name: Validate Secrets
+        run: |
+          if [[ -z "${{ secrets.VPS_PRIVATE_KEY }}" || -z "${{ secrets.PROD_VPS_HOST }}" || -z "${{ secrets.PROD_VPS_USER }}" ]]; then
+            echo "Required secrets are missing. Exiting..."
+            exit 1
+          fi
+
+      - name: Add VPS to Known Hosts
+        run: |
+          ssh-keyscan -H ${{ env.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Check Target Environment
+        run: |
+          echo "Deploying to ${{ env.TARGET_ENV }}"
+          if [[ "${{ env.TARGET_ENV }}" == "production" ]]; then
+            echo "Deploying to Production VPS"
+            echo "VPS_HOST=${{ secrets.PROD_VPS_HOST }}" >> $GITHUB_ENV
+            echo "VPS_USER=${{ secrets.PROD_VPS_USER }}" >> $GITHUB_ENV
+          else
+            echo "Deploying to Staging VPS"
+            echo "VPS_HOST=${{ secrets.STAGING_VPS_HOST }}" >> $GITHUB_ENV
+            echo "VPS_USER=${{ secrets.STAGING_VPS_USER }}" >> $GITHUB_ENV
+
+      - name: Validate Build
+        run: npm run test
+
+      - name: Copy Files to VPS
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "mkdir -p ~/app/${{ env.TARGET_ENV }}"
+          rsync -az --delete ./ ${{ env.VPS_USER }}@${{ env.VPS_HOST }}:~/app/${{ env.TARGET_ENV }}
+
+      - name: Install Dependencies
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "
+          cd ~/app/${{ env.TARGET_ENV }} && npm install --production
+          "
+
+      - name: Restart Server
+        run: |
+          if [[ "${{ env.TARGET_ENV }}" == "production" ]]; then
+            ssh -o StrictHostKeyChecking=no ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "sudo systemctl restart production-server"
+          else
+            ssh -o StrictHostKeyChecking=no ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "sudo systemctl restart staging-server"
+          fi

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import { Link, useParams } from "react-router-dom";
 import Datatable from "@/components/Datatable";
@@ -20,7 +20,21 @@ const List: React.FC = () => {
         ...(user?.role === 'artist' ? [{ label: "Actions", data: "actions", searchable: false }] : []), // Conditionally add Actions column
     ];
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
+        const handleDelete = async (id: number) => {
+            const isConfirmed = window.confirm("Do you want to delete this music?");
+    
+            if (isConfirmed) {
+                try {
+                    await deleteMusic(id);
+                    toast.success("Music Deleted Successfully!");
+                    fetchData();
+                } catch (error) {
+                    console.error("Failed to delete the music:", error);
+                    toast.error("Failed to delete the music.");
+                }
+            }
+        };
         try {
             const res = await listMusic({artist_id:id});
             const formattedData = res.data.map((music: any, index: number) => ({
@@ -43,32 +57,17 @@ const List: React.FC = () => {
                 } : {}),
             }));
             setData(formattedData);
-        } catch (err) {
+        } catch{
             toast.error("Failed Fetching Music Data");
             setData([]);
         } finally {
             setLoading(false);
         }
-    };
+    },[id,user?.role]);
 
     useEffect(() => {
         fetchData();
-    }, []);
-
-    const handleDelete = async (id: number) => {
-        const isConfirmed = window.confirm("Do you want to delete this music?");
-
-        if (isConfirmed) {
-            try {
-                await deleteMusic(id);
-                toast.success("Music Deleted Successfully!");
-                fetchData();
-            } catch (error) {
-                console.error("Failed to delete the music:", error);
-                toast.error("Failed to delete the music.");
-            }
-        }
-    };
+    }, [fetchData]);
 
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8 px-4">
