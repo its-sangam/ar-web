@@ -34,6 +34,7 @@ const App: React.FC = () => {
     }
 
     if (!roles.includes(user.role)) {
+      console.log("Tried accessing unautonrized page");
       return <Navigate to="/unauthorized" />;
     }
 
